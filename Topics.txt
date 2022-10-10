@@ -1,0 +1,24 @@
+
+
+Quarkus:
+
+Quarkus Fundamentals
+Micro Profile Specfication
+Microservices Patterns and principles
+Micro service implmentations on Quarkus
+API design
+REST API
+Dependency Injection - CDI
+Quarkus Database Integrations
+NonBlocking and async arch
+Imperative Programming and Reactive Programming in Quarkus
+Deployments -
+Cloud Native arch
+Native Application using GrallVM,Mandral Projects
+Micro service Patterns
+ Service Communication patterns 
+ Micro service Relability patterns 
+ Micro Service Registery and Discovery, Load balancer
+Micro service Message Driven/Event Driven Arch
+Microservice Management Patterns -  Observablity
+MicroService Configurations
