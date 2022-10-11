@@ -85,7 +85,7 @@ MicroProfile enables JEE Developers to leverage their existing skill set while s
 				  |
 ....................................................................................
 
-			Micro Profile Specifcation
+		   Micro Profile Specifcation
 				|
        ------------------------------------------------------------
        |

@@ -1,0 +1,503 @@
+				Service
+
+....................................................................................
+How to design service?
+
+Each service expose apis and collaborations,its relationship with services.
+
+API:
+ Application Programming interface.
+
+API implmenations
+
+1.RPI
+   Remote Procedurce invocation.
+ Services are ready to talk to another services via network
+Eg
+REST API
+GraphQL API
+RPC -gRPC
+
+2.Message Oriented
+ MOM
+   -API publish messages to the message brokers 
+   -API consumes messages from the message brokers
+....................................................................................
+			 Quarkus-Microservice-Implemenations
+
+			Service API design: REST API
+....................................................................................
+
+			REST API Design in JEE(MicroProfile)
+
+Java API for RESTful Web Services (JAX-RS) Specification:
+ Using this specifcation we design Rest api.
+
+Implementation for JAX-RS:
+.........................
+
+There are frameworks there to implement JAX-RS.
+
+RESTEasy:
+  RESTEasy is a JBoss / Red Hat project that provides various frameworks to help you build RESTful Web Services and RESTful Java applications. It is an implementation of the Jakarta RESTful Web Services, an Eclipse Foundation specification that provides a Java API for RESTful Web Services over the HTTP protocol.
+
+
+Moreover, RESTEasy also implements the MicroProfile REST Client specification API
+
+
+Quarkus team uses RESTEasy framework for building MicroService's REST API Design
+
+<dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
+</dependency>
+
+How to start designing REST API?
+
+The key abstraction of information in REST is a resource.
+
+What is Resource?
+
+Any information that can be named can be a resource:
+ a document or image, a temporal service (e.g. "today's weather in Los Angeles"), a collection of other resources, a non-virtual object (e.g. a person), and so on. In other words, any concept that might be the target of an author's hypertext reference must fit within the definition of a resource.
+ A resource is a conceptual mapping to a set of entities, not the entity that corresponds to the mapping at any particular point in time.
+
+ "Resource could be any thing but that should be relavent to the problem domain"
+
+What to represent Resource in Program?
+
+ Resource is presented by "class" during compile time and Object during runtime.
+
+Every Resource is Object, Since it is object which has "api"(methods).
+
+Every method will do some action.
+
+Action could be "reterival,add,update,delete"
+
+Every action is controlled by remote software/user through some rules called protocal(http).
+
+Every Action is mapped with Protocal methods -  GET,PUT,DELETE,UPDATE
+
+Sample Resource;
+
+According to JAX-RS spec
+
+Resource should
+
+  DomainNameResource
+
+class UserResource {
+   
+   //apis
+   public Response fetch(){
+
+   }
+   public Response save(User user){}
+  ....
+}
+
+Resource Identifiers:
+   Each resource must be identified by end users/programs via  URL pattern.
+
+/api/resource
+
+JAX-RS(RESTEasy) uses annotation in order to convert normal class into Resource class
+
+Note:
+ URL must be unique in the system
+ If the same url is duplicated, the system will return response which url is matched that data will be returned.
+.....................................................................................
+						
+package org.acme;
+
+import javax.ws.rs.*;
+
+@Path("/api/users")
+public class UserResource {
+
+    //api
+    @GET
+    public String getUsers(){
+        return "Users";
+    }
+    @POST
+    public String saveUser(){
+        return "Saved";
+    }
+    @PUT
+    public String updateUser(){
+        return "Updated";
+    }
+    @DELETE
+    public String removeUser(){
+        return  "remove";
+    }
+}
+.....................................................................................
+				
+Regular expressions and path design:
+......................................
+
+package org.acme;
+
+import javax.ws.rs.*;
+
+//main path
+@Path("/api/users")
+public class UserResource {
+
+    //api
+    @GET
+    public String getUsers(){
+        return "Users";
+    }
+    @GET
+    @Path("/something")
+    public String something(){
+        return "Something";
+    }
+    @POST
+    public String saveUser(){
+        return "Saved";
+    }
+
+    //regular expressions:  mini language for pattern matching
+    //syntax :"{variable-Name[":" regularexpression]}"
+
+    //api/users/foo/bar
+    //api/users/me/you/bar
+    @Path("{foo:.*}/bar")
+    @GET
+    public String getInfo(){
+        return "Info";
+    }
+    //api/users/foo/stuff
+    //api/users/bar/stuff
+    @Path("/{variable}/stuff")
+    @GET
+    public String getInformation(){
+        return  "Information";
+    }
+    @PUT
+    public String updateUser(){
+        return "Updated";
+    }
+    @DELETE
+    public String removeUser(){
+        return  "remove";
+    }
+}
+....................................................................................
+			Path Parameters
+
+
+package org.acme;
+
+public class Category {
+
+    public Category(){
+    }
+    public Category(String category) {
+    }
+
+    @Override
+    public String toString() {
+        return "Food";
+    }
+}
+
+Note : when you map any class with path parameter,you must have arg constructors
+we need to string methods.
+
+package org.acme;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+
+@Path("/api/products")
+public class ProductResource {
+
+    @GET
+    public String list() {
+        return "products";
+    }
+    /**
+     * //How to read Id inside Api -  @PathParam
+     * Generally clients sends strings , RESTeasy converts automatically into Integer
+     * Even we can map other objects
+     */
+    @GET
+    @Path("/{id}")
+    public String listById(@PathParam("id") Integer id) {
+        return "Products By Id" + id;
+    }
+    @Path("/category/{category}")
+    @GET
+    public String listByCategory(@PathParam("category") Category category) {
+        return "Category" + category ;
+    }
+    //rating
+    @GET
+    @Path("/{name}/{rating}")
+    public String getRating(@PathParam("name") String name, @PathParam("rating") String rating) {
+        return name + " " + rating;
+    }
+}
+....................................................................................
+Data can be passed to the end point
+
+1.through url
+   data passed
+2.through body(payload)
+
+Matrix Parameters:
+.................
+package org.acme;
+import javax.ws.rs.GET;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
+
+@Path("/library")
+public class BookResource {
+    //http://localhost:8080/library/books;name=QuarkusInACtion;author=Bill
+    @GET
+    @Path("/books")
+    public String getBookDetails(@MatrixParam("name") String name, @MatrixParam("author") String title) {
+        return name + " " + title;
+    }
+}
+...................................................................................	
+			Query Parameters
+..................................................................................
+package org.acme;
+import javax.ws.rs.GET;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+
+@Path("/library")
+public class BookResource {
+    //http://localhost:8080/library/books;name=QuarkusInACtion;author=Bill
+    @GET
+    @Path("/books")
+    public String getBookDetails(@MatrixParam("name") String name, @MatrixParam("author") String title) {
+        return name + " " + title;
+    }
+    //http://localhost:8080/library/books?copies=30&price=1200
+    //no
+    @Path("/query")
+    @GET
+    public String getBooks(@QueryParam("copies") int copies, @QueryParam("price") double price) {
+        return copies + "Books " + " " + price;
+    }
+}
+.....................................................................................package org.acme;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
+
+@Path("/api/containerinfo")
+public class ContextResource {
+
+    @GET()
+    @Path("/urls")
+    public String getUriInfo(@Context UriInfo uriInfo) {
+        System.out.println(uriInfo.getAbsolutePath() + " " + uriInfo.getRequestUri());
+        return uriInfo.getAbsolutePath() + " " +uriInfo.getRequestUri();
+    }
+
+    @GET()
+    @Path("/headers")
+    public String getHeaders(@Context HttpHeaders headers) {
+        System.out.println(headers.getRequestHeaders());
+        return headers.getRequestHeaders().toString();
+    }
+}
+.............................................................................................
+				  DefaultValues for Path
+
+if you dont pass Query parameters ,the default values can be assigned.
+
+//localhost:8080/api/myproducts/filter => output phone
+//localhost:8080/api/myproducts/filter?category=books => output books
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    @Path("/filter")
+    public String filterProductByCategoriees(@QueryParam("category") @DefaultValue("phone") String  category) {
+        System.out.println("");
+        return category;
+    }
+.....................................................................................
+
+
+
+
+
+
+
+
+After Sending request, you will get error
+
+Could not find MessageBodyWriter for response object of type: com.ibm.rs.response.type.Book of media type:
+application/json
+
+org.jboss.resteasy.core.NoMessageBodyWriterFoundFailure: Could not find MessageBodyWriter for
+ response object of type: com.ibm.rs.response.type.Book of media type: application/json
+
+The Quarkus runtime not able to convert Book object into json 
+
+JSON is nothing but text representation of "Object". -
+
+You need to convert Java object to "String"
+
+in order to convert we need special lib.
+....................................................................................	
+.....................................................................................
+				Response
+
+REST Representations:
+   How response to be represented by Resource to the User
+
+In tradtional webservice, the result would be always XML - SOAP Based webservice.
+In RESTfull webservice the result would be any thing , if user and server agrees upon
+ - JSON Format - most popular data format
+
+What can be Response?
+ String- plain/text
+ Json-
+ XML
+.....................................................................................
+
+JAX-RS api can return any of one the type
+ - String  - plain/text
+ - Objects - application/json -  XML
+ - Void    - no return type -  only status
+ - Response - Response Object 
+ - Reactive Type -Advanced		
+
+
+		     Extensions				
+
+What is extension?
+
+  extension is, project dependency - jar dependency.
+
+By default , you can have extensions when create new project.
+
+Think of Quarkus extensions as your project dependencies.
+
+Extensions configure, boot and integrate a framework or technology into your Quarkus application. 
+
+They also do all of the heavy lifting of providing the right information to GraalVM for your application to compile natively.
+
+How to manage extensions(dependency)?
+
+managment means - add,removing,listing extensions
+
+there are two ways
+
+1.via maven or gradle 
+2.via cli - quarkus
+
+E:\session\IBM\2022\march\quarkus\code-with-quarkus>quarkus  ext ls
+Current Quarkus extensions installed:
+
+? ArtifactId                                         Extension Name
+? quarkus-resteasy                                   RESTEasy JAX-RS
+? quarkus-resteasy-jackson                           RESTEasy Jackson
+
+
+E:\session\IBM\2022\march\quarkus\code-with-quarkus>quarkus  ext rm resteasy-jackson
+[SUCCESS] Extension io.quarkus:quarkus-resteasy-jackson has been uninstalled
+
+How to send JSON Payload as Response?
+
+Quarks cant convert any object into JSON by default with help of "RestEasy" extension
+
+Add resteasy-jackson
+
+E:\session\IBM\2022\march\quarkus\code-with-quarkus>quarkus  ext add resteasy-jackson
+[SUCCESS] Extension io.quarkus:quarkus-resteasy-jackson has been installed
+
+package org.acme.response.types;
+
+import io.quarkus.arc.lookup.LookupIfProperty;
+import org.acme.response.types.entity.Movie;
+
+import javax.ws.rs.Path;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.util.List;
+
+@Path("/api/movies")
+public class MovieResource {
+    //String
+    @GET
+    @Path("/list")
+    @Produces(MediaType.TEXT_PLAIN) // the type of data format
+    public String getMovies() {
+        return "Movies";
+    }
+
+    //void
+    @GET
+    @Path("/show")
+    //No Content is returned -204- HTTP
+    public void showBook() {
+        System.out.println("show Movie");
+    }
+
+    //Object
+    @GET
+    @Path("/mymovie")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Movie myMovie() {
+        //return Movie
+        return new Movie("894343434", "Matrix", "John");
+    }
+
+    @GET
+    @Path("/mymovielist")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Movie> myMovieList() {
+        //return Movie
+        return List.of(new Movie("894343434", "Matrix", "John"), new Movie("894343434", "Matrix", "John"));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  

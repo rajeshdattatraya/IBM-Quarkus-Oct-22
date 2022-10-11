@@ -1,0 +1,16 @@
+Assignment 1 :
+
+ You have to build book Resource
+
+/api/books
+
+=>FindAll books
+=>findBook by isbn, author
+=>filter books by category and language - userinterface,microservices
+=>save new book 
+=>remove existing book - by isbn
+=>update book information
+
+Model : isbn,author,title,publisher,dateofpublishing,edition
+
+Database: in memory database(datastructure) -  List or Set or Map - Findout approiate collection
