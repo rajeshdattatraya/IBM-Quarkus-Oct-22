@@ -1,0 +1,572 @@
+				Micro Services
+.....................................................................................
+Application(software system) Develpment patterns:
+.................................................
+
+Network based Applications - Distributed Application
+
+Application has layers:
+
+1.User interface layer
+2.Application biz layer
+3.Data Layer /Repository layer
+
+
+Architecture of Distributed Application
+
+1.Mainframework based distributed
+   1.Application biz layer
+   2.Data Layer /Repository layer
+ Where as User interface layer is kept in dump terminals connected to mainframworks.
+
+Drawbacks:
+1.Too costly
+2.scalability is too difficult.
+
+Advantage:
+1.High security
+2.Centeralized management.
+
+2.Client Server Architecture
+
+2.1.Main framework based client -server , where as mainframe acts as server and digital computers act as clients.
+ 
+2.2.Digital computer based client - server architechture
+   Servers and clients are digital computers
+
+Based on this we can classify the applications  layered /tiered concept
+
+1.single tier/layer
+   client,server,database every is kept in one single machine...
+2.two tier/layer
+  user interface is kept in client machine,
+  data logic and biz logic is kept in server machine
+ both machines are connected via networks
+
+          "This arch based on LAN /WAN"
+
+3.three tier /layer
+
+ This arch based on "internet network" and web computing
+
+   client - client machine
+   server - biz logic is kept inside another machine
+   database - is kept inside another machine
+
+ Client is browser
+ Server BIZ logic is kept as "web Applications"
+ Database is accessed by "Server side technologies - J2EE,ASP/.net,PHP,....
+
+4.N-tier / layer
+
+ Client is browser
+ Server BIZ logic is kept as "web Applications"
+   -Again spilt into multi layered
+ Database is accessed by "Server side technologies - J2EE,ASP/.net,PHP,....
+.....................................................................................
+		    How to build N-tier distributed Applications
+
+Steps/Process:
+
+1.Domain Modeling
+
+  Banking, Online Food Delivery App, Ecommerce Domain
+
+2.Select technology
+
+   if your app is based on web and internet.
+  Steps:
+   1. Database -  Oracle 
+   2. MOM - RabbitMQ,IBM MQ,Microsoft MQ
+   3. Development Technology
+       Java/JEE  - Why you go with specific implmentation technologies?
+       .Net
+       Php
+
+3.Development and release methodology
+   Waterfall -  traditional dev , release
+
+Any domain consist of various modules
+ -Accounts
+ -Loans
+ -Customers
+ -Card
+etc.....
+ 
+4.Testing
+   Once the development is over, the app is going to be under testing
+
+5.Production
+   Once the app is tested fully, ready for production.
+
+6.Maintance
+   Once the app in the production, it goes on maintaince...
+
+if any app is built based on the above methodology, which is called as "Monolithic"
+
+.....................................................................................
+ Challanges in the application development,testing,relase,Production,maintaince
+
+1.Every thing has to go step by step -  this increase cost , time waste,resource waste
+
+Companies like Amazon,Netflix who wanted fast development,test,release,maintaince : Dynamic  methodology to build applications -  No downtime,
+One module takes more time ,another module takes less time, because of one module , other module should not wait.
+
+2.Technology bottleneck - Mono technology
+ 
+ The whole application is built using single technology - Java - vendor lock
+ The whole application targets single database - Oracle /Mysql/Microsoft SQL server..
+
+
+3.Employing security layer is more complicated
+
+4.Deployment / Production.
+
+   The dev and prod env is completly different
+   Bare deployment models
+   VM based deployment...
+...................................................................................
+			  New way of building apps
+
+
+1.Automatation is key concept 
+
+   to anays,dev,test,release,prod,maintaince
+
+Agile :(Requirement Analysis)
+
+  Agile is an iterative approach to project management and software development that helps teams deliver value to their customers faster and with fewer headaches. Instead of betting everything on a "big bang" launch, an agile team delivers work in small, but consumable, increments
+
+Breaks the application into smaller and smaller.
+ - fast delivery with quality on time.
+
+Requirments are highly dynamic, cant be freezed,since it is dynamic start development,test,release,deploy peridically.
+
+We need automation, through which  automatically only we can achive fast delivery -
+ in order to automate, a new technology was created "Dev Ops" - Dev + Operations togther.
+
+Distributed source code repo - git
+Pipe lines tools  - 
+   Jenkins -(Continuous Integration)
+
+Requirement---> Dev---push the code to source code repo---|CI Tool---Compile--Build/pack--Testing-Deployment(CD)
+
+Every thing is here Continuous happens
+
+Continuous Req Analysis
+Continuous Dev 
+Continuous release /build
+Continuous test
+Continuous release /build
+Continuous deployment
+Continuous tracing and monitoring
+
+This process applied on every module in the applications
+OrderManagement 
+   Continuous Req Analysis,Dev,release,test,deployment,tracing,monitoring
+
+CustomerManagement 
+   Continuous Req Analysis,Dev,release,test,deployment,tracing,monitoring
+
+
+if any app is built based on the above methodology, that application is called as 				  "MicroService"
+
+....................................................................................
+	     How to convert existing monolithic apps into microservices
+.....................................................................................
+
+There is a process / pattern to convert existing monolithic into microservices
+                          "Scale Cube"
+
+
+Scale cube 3D model defines three separate ways to scale an application.
+
+X-Axis
+Z-Axis
+Y-Axis
+
+Y-Axis scalling talks about how to spilt the existing monolith  application into micro services based on "functionals aspects" - Service
+
+A Service is a "mini application" that implmements narrowly focused functionality.
+Such as orderManagement,customer Management, and so on....
+
+Some services are scalled based on "X-axis" and some services are "Z-scalling".
+
+
+Your App
+   -Y scalling
+       -X or Z scalling....
+
+The high level definition of microservices architecture(microservices) is an architectural style that "functionally decomposes an application into set of services(mini applcation)
+
+In Monlolith app the app is broken into "modules" where as microservice break as services(mini application)..
+
+What Microservices offers?
+
+1.Microservices offers "form of modularity"
+2.Each service has its own database - Customer Service may use "Mongodb'
+  where as payment service may use "Oracle database"
+
+Benefits of the microservice architecture
+
+ It enables the continuous delivery and deployment of large, complex applications.
+ Services are small and easily maintained.
+ Services are independently deployable.
+ Services are independently scalable.
+ The microservice architecture enables teams to be autonomous.
+ It allows easy experimenting and adoption of new technologies.
+ It has better fault isolation
+
+....................................................................................
+			How to design and implment microservices
+
+The microservices is all about practices followed,implemented, and tested in real time production grade applications in various companies like amazon,netflix,google,microsoft.
+
+The many community people joined to togther who formed the pattern language in order to begin development of Microservices - Microservice pattern language design patterns
+.....................................................................................
+		  Decision Pointers when start building app
+
+
+Step : 0 - May be for new Application(new Requirement) or existing Application
+
+Requriment for building online food delivery:
+	
+1.You are developing a server-side enterprise application.
+
+2.It must support a variety of different clients including desktop browsers, mobile browsers and native mobile applications. 
+
+3.The application might also expose an API for 3rd parties to consume.
+
+4.It might also integrate with other applications via either web services or a message broker.
+
+5.The application handles requests (HTTP requests and messages) by executing business logic; accessing a database; exchanging messages with other systems; and returning a HTML/JSON/XML response. 
+
+6.There are logical components corresponding to different functional areas of the application.	
+
+Biz domain :
+ Orders 
+ Customers
+ Delivery
+ Restaurnt
+
+Step 1:
+
+Decision #1:
+  Monoloithic Architecture or MicroService Architecture
+
+MicroService Architecture:
+  Start  Thinking about 
+
+Forces
+Results
+Advantages
+Drawbacks
+Solutions
+
+.....................................................................................
+			   Software Development and Design patterns
+
+In order to build applications in a standard way across the industry, we follow common design patterns.
+
+
+The Problem(Requirment)
+              ----------->Monolith----|Follows all monolith Design Patterns
+Most of GOF pattern and MVC......
+	
+	     ------------>MicroService----|Follows MicroService Design patterns.
+
+if you pick the Microservices  arch pattern, you must choose numerous other patterns to deal with the consequences of your decision.
+
+Micro Service Arch Patterns:
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+
+
+Decompostion:
+ 
+Decompose by Business capability:
+
+Define services corresponding to business capabilities. A business capability is a concept from business architecture modeling. It is something that a business does in order to generate value. A business capability often corresponds to a business object, e.g.
+
+Order Management is responsible for orders
+Customer Management is responsible for customers
+
+Business capabilities are often organized into a multi-level hierarchy. For example, an enterprise application might have top-level categories such as Product/Service development, Product/Service delivery, Demand generation, etc.
+
+Examples
+The business capabilities of an online store include:
+
+Product catalog management
+Inventory management
+Order management
+Delivery management
+
+How to indentify business capability?
+   You have to master business
+ 
+
+Alternate Pattern: Decompose by subdomain:
+
+Define services corresponding to Domain-Driven Design (DDD) subdomains. DDD refers to the application’s problem space - the business - as the domain. A domain is consists of multiple subdomains. Each subdomain corresponds to a different part of the business.
+
+Subdomains can be classified as follows:
+
+Core - key differentiator for the business and the most valuable part of the application
+Supporting - related to what the business does but not a differentiator. These can be implemented in-house or outsourced.
+Generic - not specific to the business and are ideally implemented using off the shelf software
+
+Examples
+
+The subdomains of an online store include:
+
+Product catalog
+Inventory management
+Order management
+Delivery management
+…
+The corresponding microservice architecture would have services corresponding to each of these subdomains.
+...................................................................................
+
+Micro Service Arch Patterns:
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+
+
+Data /Storage Modeling:
+1.Database Per Service Pattern
+   
+Services are indenpendently built,tested,deployed, so we have to have its own database.
+  
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+
+In large scale Microservices are going to communicate each other, Services are dependent with respect to biz tranactions.
+
+ CustomerService                  OrderService
+    |---place order                   |
+          
+			
+ Customer table                   Order table
+
+Incase if you update customer and order table together we need to ensure that update operations are succfully carried out.
+
+Since each service has its own database, how to ensure that services are properly updating data.
+
+                          Data Consistency in microservice 
+			     (Distributed transcation)
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+			 Saga Pattern - for CURD operations -level 3.1
+
+How to implement distributed Transactions?
+
+Solutions:
+1.2PC (2 phase commit)
+2.Saga
+    Event / Message oriented way of communicating services through which 
+ transaction are performed
+Types of Saga implementation:
+  Choreography based saga
+  orchestration based saga
+
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+			  Saga Pattern - for CURD operations -level 3.1
+			  Data Reterival Pattern - 3.2
+
+ Data Reterival Pattern - 3.2
+    API Composition 3.2.1
+    Alternate Pattern 3.2.2
+     CORS - Command Query Responsiblity Segregation
+ 
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Shared Database
+			   - Mostly not recommened for Microservice patterns
+
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+			  Saga Pattern - for CURD operations -level 3.1
+			  Data Reterival Pattern - 3.2
+         
+        --------->Service Communication Patterns - 4
+
+
+Service Communications:
+
+1.Service Communication style patterns
+2.Service lookup(Discovery Patterns)
+3.Service Reliablity Patterns
+4.Service External Communictions -Api GateWays
+
+
+Services at low level exposed as "API"
+
+API Types/API implmementations:
+1.REST
+2.RPC
+3.GraphQL
+4.MOM implmentation
+5.SOAP
+
+
+1.Service Communication style patterns
+ Way of communcations:
+
+1.1.RPI - Remote Procedure Invocation:
+.................................
+ We need to think about protocals
+REST - http
+RPC(GRpc) - TCP
+Apache Thrift
+1.2.Message Oriented Pattern
+  MOM middlewares
+    - Kafka,rabbitmq...
+
+
+Service Look ups (Service Discovery Patterns)
+
+  Identifying the location of the services in container based deployed is really hard, the reason is dynamic ips.
+
+Service Discovery Implmentations:
+
+1.client side discovery
+      Registry implmentation would be the part of who is calling the service
+2.Server side discovery
+      Registry is maintained in centeralized place , all services who looks up from the common registry
+
+As part of service discovery we can implment, Load balancer or Router, so that we can
+"Scalability and High Availabilty"
+
+3.Service Reliablity Patterns:
+  
+   Service A is calling Service B 
+          Service A get results -  success/failure(exception)
+ 	  Service A get results
+		  on time  - 1000ms
+		  beyond time - 5000ms
+  Service a dont want to wait---hangging..
+		Timeout
+	
+Reliablity pattern helps to resolve "Errors" , convert errors into usefull response.
+Reliablity pattern helps to resolve "Slow calls" , incase slow call, we can return alternate response from the caching servers.
+
+Reliablity Pattern Implmentations
+
+1.BulkHead
+2.Timeout
+3.Retry
+4.CircuitBreaker
+
+4.Service External Communictions -Api GateWays
+
+ Connecting Microservices with External apps like mobile,desktop,webui...
+ 
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+			  Saga Pattern - for CURD operations -level 3.1
+			  Data Reterival Pattern - 3.2
+         
+        --------->Service Communication Patterns - 4
+
+ 	--------->Deployment Patterns - 5
+
+
+
+Deployments:
+  1.Per host multiple services
+  2.Per Service Per host
+  3.Containierzied deployment
+  4.Serverless deployment
+  5.Service deployment platforms
+
+Problem - level-0
+ MicroServices - level-1
+	-------->Y'Scaling Pattern - level -2
+		    Functional Decomposion Pattern
+	-------->Data /Storage Modeling - Level -3
+			Database Per Service Pattern
+			  Saga Pattern - for CURD operations -level 3.1
+			  Data Reterival Pattern - 3.2
+         
+        --------->Service Communication Patterns - 4
+
+ 	--------->Deployment Patterns - 5
+	
+	--------->Monitoring and management - 6 -Observerablity Pattern
+
+	--------->Cross Cutting Concerns - 7 
+
+Other Patterns
+ 8.Testing patterns
+ 9.Security Patterns 
+	Access Tokens -Authentication and authorization
+
+Monitoring and management -Observerablity Pattern
+
+1.Logs - Centeralized logs
+   Applicaiton logs,audit logs
+2.Tracing - to measure api/service performance
+3.Exception Tracker-
+4.Helath Monitor -  to measure your app performance - memory,cup useage.....
+
+Cross Cutting Concerns:
+1.Externalized configurations
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,8 @@
 package org.acme.response.types.entity;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
 public class Movie {
     private String id;
     private String name;
@@ -14,12 +17,12 @@ public class Movie {
         this.author = author;
     }
 
-    public String getISBN() {
+    public String getId() {
         return id;
     }
 
-    public void setISBN(String ISBN) {
-        this.id = ISBN;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -36,5 +39,14 @@ public class Movie {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", author='" + author + '\'' +
+                '}';
     }
 }

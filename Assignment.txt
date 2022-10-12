@@ -5,12 +5,31 @@ Assignment 1 :
 /api/books
 
 =>FindAll books
-=>findBook by isbn, author
-=>filter books by category and language - userinterface,microservices
+   if no books, return empty list
+=>findBook by isbn
+  if books not found , throw Exception
+  Path Param
+=>filter books by category
+   Use Query Param
 =>save new book 
+   Save booking to existing database(List)
+   after success return status code 201 with location and entity created
 =>remove existing book - by isbn
+    just delete entry from list 
+   success , return 200
+   error, return error code- NotFound
 =>update book information
+   pass isbn code and payload 
+   update and return updated books
+   if error, return error 
 
 Model : isbn,author,title,publisher,dateofpublishing,edition
 
 Database: in memory database(datastructure) -  List or Set or Map - Findout approiate collection
+
+Requriement:
+1.Build REST End points
+2.Service layer 
+3.CDI implmentations
+4.Global Exception Mapper 
+ 
