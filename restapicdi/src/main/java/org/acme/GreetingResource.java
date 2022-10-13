@@ -1,16 +1,22 @@
 package org.acme;
 
+import org.acme.services.GreeterService;
+
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/hello")
+@Path("/greet")
 public class GreetingResource {
 
+    @Inject
+    GreeterService greeterService;
+
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String hello() {
-        return "Hello from RESTEasy Reactive";
+    public String sayGreet() {
+        return greeterService.sayGreet();
     }
+
 }
