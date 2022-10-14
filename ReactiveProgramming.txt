@@ -1,0 +1,308 @@
+			 Reactive Programming
+.....................................................................................
+
+What is Reactive Programming?
+
+ It is programming model which has been on the top of various industry standard design patterns and pricinciples to optimize the building distributed apps(micro service)
+
+1.NonBlocking Arch , Async
+2.Observer pattern 
+     -Core design pattern for building event driven arch
+ Publisher publishes events  - data,error,complete
+ Subscriber subscribe events - success,error,complete
+3.iterator pattern
+   Pull data - tradtional iterator
+   Reactive Pull - Push
+4.functional programming style
+   -hof - higher order function
+   -pure function and immutablity = declarative, programming  - concurrency
+
+Reactive programming offers the programming model which helps to process data(messages) in motion.
+
+The term called Stream became very popular in reactive programming with respect to data transfer.
+
+Data Processing:
+
+  Data processing is done generally at database side
+  LINQ - Application language to process data in the application memory
+
+LINQ Apis are used to process data like filtering,transfering,aggrating....
+LINQ Called those apis "operators" 
+
+Birth of reactive programming.....
+....................................................................................  
+		     Standards of Reactive Programming
+....................................................................................
+
+Standards define how to build efficient distributed system using reactive principles
+https://www.reactivemanifesto.org/
+
+Reactive Streams
+   It is built for java.
+   Provides spec and apis how to handle back pressure in non blocking message work    flows.
+   It is common/unified api for many implementators
+https://www.reactive-streams.org/
+
+Reactive Programming implemenation:
+...................................
+
+Reactive programming concepts are language independent.
+
+Java Implmentation:
+...................
+1.Rxjava
+2.Project Reactor -  used by Spring Framework by default.
+3.SmallRye Muntiny - Red hat...
+
+
+Mutiny was built by Red hat team
+Mutiny first integrated with Quarkus, later with Vertx.
+Mutiny is reactive stream certified
+Mutiny is the perfect companion to tame the async nature of apps with non blocking io.
+.....................................................................................
+			 Quarkus and mutiny
+
+Quarkus provides mutiny as stream processing,message passing lib along with vertx engine to leverge non blocking arch.
+
+Where ever you see the reactive-** dependency , which is powered with muntiny.
+
+When ever you add reactive dependency, Vertx Engine's event loop threads are activated/non blocking threads...
+....................................................................................
+			 Core Concepts of Muntiny
+....................................................................................
+
+Publisher:
+  Object - Provider of data 
+Subscriber:
+  Object - Receiver of data
+Subscription -
+   Object who conects Publisher and Subscriber in back end.
+Operators 
+   Are apis provided to process "stream of data"
+
+
+Uni
+  A Uni represents a stream that can only emit either an item or a failure event.
+Multi
+A Multi represents a stream of data. A stream can emit 0, 1, n, or an infinite number of items.
+
+Both are objects created by using factory apis
+
+package com.ibm.reactive.streams;
+
+import io.smallrye.mutiny.Uni;
+
+public class FirstUni {
+    public static void main(String[] args) {
+        Uni<String> uniStream = Uni.createFrom().item("Hello World");
+        //subscribe
+        uniStream.subscribe().with(item -> System.out.println(item));
+
+        new GreeterService(new HelloWorldService()).sayHello();
+    }
+}
+...
+package com.ibm.reactive.streams;
+
+public class GreeterService {
+    private HelloWorldService helloWorldService;
+
+    public GreeterService() {
+
+    }
+
+    public GreeterService(HelloWorldService helloWorldService) {
+        this.helloWorldService = helloWorldService;
+    }
+
+    public void sayHello() {
+        helloWorldService.sayHello().subscribe().with(System.out::println);
+    }
+}
+package com.ibm.reactive.streams;
+
+import io.smallrye.mutiny.Uni;
+
+public class HelloWorldService {
+
+    //api to return stream
+    public Uni<String> sayHello(){
+        return Uni.createFrom().item("Hello World");
+    }
+}
+
+Error:
+
+package com.ibm.reactive.streams;
+
+import io.smallrye.mutiny.Uni;
+
+public class UniWithFailure {
+    public static void main(String[] args) {
+      Uni<String> stream =  Uni.createFrom().failure(new RuntimeException("oops"));
+
+      stream.subscribe().with(System.out::println);
+
+
+    }
+}
+.....................................................................................
+			Bizlogic with Streaming
+.....................
+package com.ibm.reactive.streams.uni;
+
+
+import io.smallrye.mutiny.Uni;
+
+class LoginService {
+    public Uni<String> auth(String name, String password) {
+        if (name.equals("admin") && password.equals("admin")) {
+            return Uni.createFrom().item("Login Success");
+        }
+        return Uni.createFrom().failure(new RuntimeException("Login Failed"));
+    }
+}
+
+public class UniWithSuccessOrFailure {
+    public static void main(String[] args) {
+        LoginService login = new LoginService();
+        login.auth("admin", "admin").subscribe().with(status -> {
+            System.out.println(status);
+        }, err -> {
+            System.out.println(err.getMessage());
+        });
+        login.auth("foo", "admin").subscribe().with(status -> {
+            System.out.println(status);
+        }, err -> {
+            System.out.println(err.getMessage());
+        });
+    }
+}
+................
+Multi:
+package com.ibm.reactive.streams.uni;
+
+import io.smallrye.mutiny.Multi;
+
+public class MulitStream {
+    public static void main(String[] args) {
+        Multi<Integer> itemsStream = Multi.createFrom().items(1, 2, 3, 4, 5);
+        //subscribe
+        itemsStream.subscribe().with(item -> {
+            System.out.println(item);
+        }, err -> {
+            System.out.println(err);
+        }, () -> {
+            System.out.println("Completed");
+        });
+        //emitting more values : 1..100
+        Multi.createFrom().range(1,100).subscribe().with(item -> {
+            System.out.println(item);
+        }, err -> {
+            System.out.println(err);
+        }, () -> {
+            System.out.println("Completed");
+        });
+
+    }
+}
+....................................................................................
+
+Reactive Program enables streaming data via events among applications
+Reactive program even helps to process streaming data among application
+
+Pipe lines
+SourceData-----|Stream-----Processing--------Stream --Processing
+                  (5 items)    (3)             (3) with modified 
+                                              
+
+package com.ibm.reactive.streams.processing;
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+
+public class StreamProcessing {
+    public static void main(String[] args) {
+        //uniStreamProcessing();
+        multiStreamProcessing().select()
+                .where(n -> n % 2 == 0)
+                .select().first(5)
+                .select().distinct()
+                .onItem().transform(n -> "[" + n + "]")
+                .subscribe().with(System.out::println);
+    }
+
+    private static Multi<Integer> multiStreamProcessing() {
+        //filter even numbers
+        return Multi.createFrom()
+                .range(1, 101);
+
+    }
+
+    private static void uniStreamProcessing() {
+        Uni.createFrom()
+                .item(2)
+                .onItem()
+                .transform(item -> item * 2)
+                .subscribe().with(System.out::println);
+    }
+}
+..................................................................................
+			 Handling errors
+
+How to throw Exception and Print stack trace?
+			       
+			       |- you do this
+stream.failure() -error-onError|- you do that
+				- you dont anything
+
+package com.ibm.reactive.streams.errhandling;
+
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.subscription.UniEmitter;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class RetryHandler {
+    public static void main(String[] args) {
+        Uni.createFrom().emitter(emitter -> {
+                    generate(emitter);
+                }).onFailure()
+                .invoke(() -> System.out.println("failed"))
+                .onFailure().retry().atMost(50)
+                .subscribe().with(System.out::println, System.out::println);
+    }
+
+    private static void generate(UniEmitter<? super Object> emitter) {
+        if (ThreadLocalRandom.current().nextDouble(0.0d, 1.0d) < 0.05d) {
+            emitter.complete("Success");
+        } else {
+            emitter.fail(new RuntimeException("Something went Wrong!"));
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

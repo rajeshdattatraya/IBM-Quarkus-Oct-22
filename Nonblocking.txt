@@ -1,0 +1,86 @@
+				
+			    NonBlocking and Reactive
+.....................................................................................
+				 File Descriptors
+.....................................................................................
+
+1.File descriptors is  program written in c language- array
+2.File descriptor is associated with every process on os- if you run more than one process - will have more file descriptor table
+
+FD arch:
+Integer value	Name	<unistd.h> symbolic constant[1]	<stdio.h> file stream[2]
+0	Standard input	STDIN_FILENO	stdin
+1	Standard output	STDOUT_FILENO	stdout
+2	Standard error	STDERR_FILENO	stderr
+
+ data= readFromSocket() -----|running---
+ calculate()
+ add()
+ mulitply()
+................................................................
+
+Process:
+1.we use language high level api to start reading file from the disk
+  java:
+   FileInputStream fins= newFileInputStream("c:/tmp/version.txt")
+   fins.read()
+
+ java uses read api--------|jvm----will call c api(os api)---->kernal--fd
+
+2.we use language high level api to start reading data from the network(Remote computer)
+  java:
+ java uses readSocket------i--------|jvm----will call c api(os api)---->kernal--fd
+
+...
+..................................................................................
+
+Network io and web server:
+
+Any web server if you take, it works based on io model- socket-network io.
+
+Traditional web server,  for every client request is  handled inside server by a thread.
+
+                    "Request Per Thread model"
+			
+.....................................................................................
+Drawbacks of Request Per Thread Model.
+   1000 req = 1000 thread
+   1 million = 1 million threads
+
+if webserver starts receiving more and more load, they cant handle request.
+The problem was called as "C10K" Problem
+
+c10k Problem:
+The C10k problem is the problem of optimizing network sockets to handle a large number of clients at the same time. The name C10k is a numeronym for concurrently handling ten thousand connections.
+ 
+ if a webserver handles 10 thousand connections(threads) at the same time , it is good webserver".
+
+
+....................................................................................
+        C10k Problem aims to handle more request with min "Resource"
+....................................................................................
+
+Here Resource means threads.
+How to reduce thread to handle more users.
+ Having limited no of threads how to handle more request.
+
+Why should i reduce thread? what is problem with threads?
+
+Evils of Thread:
+ ->Thread is subject to memory.
+ ->Thread is subject to cpu, cpu need to do lot of ctx switch.
+ ->Thread inter communication causes thread dead locks
+....................................................................................
+Solution:
+ Having  a limited no of threads , at least one or two.
+
+In 2000, The linux operating system introduced an api which is non blocking io api 
+
+
+
+
+
+
+
+
+
