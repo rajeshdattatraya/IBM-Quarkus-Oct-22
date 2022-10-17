@@ -281,6 +281,211 @@ public class RetryHandler {
         }
     }
 }
+.....................................................................................
+			Quarkus Reactive System and Non blocking
+
+
+Quarkus from day1 been built on the reactive standards and non blocking arch with vertx engine and netty.
+
+Quarkus apps are highly resource effect apps.
+
+Quarkus has re written all microprofile specification with "reactive".
+
+...................................................................................
+			  Threading models in Quarkus
+...................................................................................
+
+There are two threading models
+
+1.Event loop thread
+  threads which handles events from the kernal
+  No of event loop threads are eq no cpu core
+ 
+2.Worker pool thread
+    Dedicated threads - blocking threads
+
+  if you any operations on this thread, which is blocked by default
+ 
+
+Basic Reactive End Point:
+package org.acme;
+
+
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import java.util.List;
+
+@Path("/api/users")
+public class UserResource {
+
+    //This is running in worker pool thread : Dedicated thread
+    @GET
+    public String getUserInfo() {
+        System.out.println("User Info End Point => " + Thread.currentThread().getName());
+        return "User";
+    }
+    //Event loop: how to schedule this request in non-blocking mode
+
+    @GET
+    @Path("/reactive")
+    public Uni<String> getUserReactiveInfo(){
+        System.out.println("Reactive End point => " + Thread.currentThread().getName());
+        return Uni.createFrom().item("Hello reactive");
+    }
+
+    @GET
+    @Path("/reactive/multi")
+    public Multi<List<String>> getUsers(){
+        System.out.println("Reactive End point -2 => " + Thread.currentThread().getName());
+
+        return Multi.createFrom().item(List.of("Subramanian","Karhtik"));
+    }
+
+
+}
+...................................................................................
+			The Golden Rule - Don’t Block the Event Loop
+...................................................................................
+
+What if your rest api is reactive(nonblocking), executed by event loop thread....
+The api is going to call service layer which has blocking code...
+
+Blocking code
+
+1.thread.sleep - blocks the current thread.
+2.long running cpu taks - long while or for loops
+3.tradtional db or thrid party calls
+4.long network calls 
+5.file io calls
+
+package org.acme;
+
+import io.smallrye.mutiny.Uni;
+import org.acme.service.HelloService;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/api/hello")
+public class HelloResource {
+
+    @Inject
+    HelloService helloService;
+
+    @GET
+    public Uni<String> hello() throws Exception {
+        System.out.println("Hello =>" + Thread.currentThread().getName());
+        return Uni.createFrom().item(helloService.hello());
+    }
+}
+
+package org.acme.service;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class HelloService {
+
+    public String hello() {
+        //delay response
+        try {
+            Thread.sleep(3000);
+
+        }
+        catch (InterruptedException es){
+
+        }
+        return  "Hello delayed response";
+    }
+}
+
+After running this eg: you will get exception like below
+
+Thread[vert.x-eventloop-thread-1,5,main] has been blocked for 2090 ms, time limit is 2000 ms: io.vertx.core.Ve
+rtxException: Thread blocked
+        at java.base@11.0.11/java.lang.Thread.sleep(Native Method)
+        at org.acme.service.HelloService.hello(HelloService.java:11)
+        at org.acme.service.HelloService_Subclass.hello$$superforward1(Unknown Source)
+        at org.acme.service.HelloService_Subclass$$function$$7.apply(Unknown Source)
+        at io.quarkus.arc.impl.AroundInvokeInvocationContext.proceed(AroundInvokeInvocationContext.java:54) 
+        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.proceed(InvocationInterceptor.java:62)   
+        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor.monitor(InvocationInterceptor.java:49)   
+        at io.quarkus.arc.runtime.devconsole.InvocationInterceptor_Bean.intercept(Unknown Source)
+        at io.quarkus.arc.impl.InterceptorInvocation.invoke(InterceptorInvocation.java:42)
+        at io.quarkus.arc.impl.AroundInvokeInvocationContext.perform(AroundInvokeInvocationContext.java:41) 
+        at io.quarkus.arc.impl.InvocationContexts.performAroundInvoke(InvocationContexts.java:33)
+        at org.acme.service.HelloService_Subclass.hello(Unknown Source)
+      
+
+Generally Event loop threads(Non blocking threadings) can be blocked for "2000ms" only - blocking time out for  event loop thread.
+
+Beyond the time if thread is blocked, system will throw exception "Thread Blocked Exception".
+
+Wrting blocking code inside non blocking code is not recommended but what if i want.
+
+Solution is write blocking in dedicated thread and submit the result to non blocking thread.
+
+@Blocking:
+  Annotate on the rest api where you are calling blocking api..
+package org.acme;
+
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.Uni;
+import org.acme.service.HelloService;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/api/hello")
+public class HelloResource {
+
+    @Inject
+    HelloService helloService;
+
+    @GET
+    @Blocking
+    public Uni<String> hello() throws Exception {
+        System.out.println("Hello =>" + Thread.currentThread().getName());
+        return Uni.createFrom().item(helloService.hello());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
