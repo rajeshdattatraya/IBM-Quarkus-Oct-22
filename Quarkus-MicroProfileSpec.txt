@@ -1,0 +1,386 @@
+				MicroProfile Config Specification
+.....................................................................................
+In Micro service Applications, configurations are always critical. we have to store application configuration information within application or centerialzed way..
+
+In Quarkus Microprofile specification has been integrated with "SmallRye"
+
+
+             QuarkusApp
+                 |
+   SmallRye Config Implementation
+                 |
+             MicroProfile Spec
+
+
+Config Sources:
+  The place from where the configuration data is present.
+
+1.(400) System properties 
+
+2.(300) Environment variables
+
+3.(295) .env file in the current working directory
+
+4.(260) Quarkus Application configuration file in $PWD/config/application.properties
+
+5.(250) Quarkus Application configuration file application.properties in classpath
+
+6.(100) MicroProfile Config configuration file META-INF/microprofile-config.properties in classpath
+
+7.Third Party Configuration infrastructure
+  consul,kubernetes,zookeeper,git,external webserver etc.....
+
+
+ A configuration property lookup starts by the "highest ordinal configuration source available and works it way down to other sources until a match is found". This means that any configuration property may override a value just by setting a different value in a higher ordinal config source. For example, a property configured using an environment property overrides the value provided using the application.properties file.
+..
+
+Use Case : how to read config values from the application.properties
+package org.acme.service;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class GreetingService {
+
+    @ConfigProperty(name="greeting.message")
+    String message;
+    @ConfigProperty(name="greeting.name")
+    String name;
+
+    public String sayGreet(){
+        return message + name;
+    }
+}
+package org.acme;
+
+import org.acme.service.GreetingService;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("/greet")
+public class GreetingResource {
+
+    @Inject
+    GreetingService greetingService;
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        return greetingService.sayGreet();
+    }
+}
+................................................................................
+		What if the config property not present in the configuration file
+................................................................................
+
+quarkus: io.quarkus.dev.appstate.ApplicationStartException: java.lang.RuntimeException: Failed to start quar
+kus
+        at io.quarkus.dev.appstate.ApplicationStateNotification.waitForApplicationStart(ApplicationStateNoti
+fication.java:58)
+        at io.quarkus.runner.bootstrap.StartupActionImpl.runMainClass(StartupActionImpl.java:122)
+        at io.quarkus.deployment.dev.IsolatedDevModeMain.restartApp(IsolatedDevModeMain.java:222)
+ 
+package org.acme.service;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class GreetingService {
+
+    @ConfigProperty(name="greeting.message" ,defaultValue = "Greeting")
+    String message;
+    @ConfigProperty(name="greeting.name",defaultValue = "Quarkus")
+    String name;
+
+    public String sayGreet(){
+        return message + "  " + name;
+    }
+}
+...................................................................................
+		  Programmetic way of accesssing configuration Property
+....................................................................................
+
+ConfigProvider:
+package org.acme.service;
+
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class GreetingService {
+
+    @ConfigProperty(name = "greeting.message", defaultValue = "Greeting")
+    String message;
+    @ConfigProperty(name = "greeting.name", defaultValue = "Quarkus")
+    String name;
+
+    public String sayGreet() {
+        return message + "  " + name;
+    }
+
+    //Read config values via code
+    public String saySomething() {
+        //    return ConfigProvider.getConfig().getValue("greeting.when",String.class);
+
+        return ConfigProvider.getConfig().
+                getOptionalValue("greeting.when", String.class)
+                .orElse("long long ago");
+    }
+}
+....................................................................................
+			System Properties
+..................................................................................
+Through dev Mode:
+................
+
+ mvn compile quarkus:dev  -Dgreeting.message=Hello,FromSystem
+
+Properties:
+ System Properties are supplied through -D flag during startup.
+
+System Properties:
+
+ System properties are supplied through -D flag during startup.
+
+application.properties
+# Application configuration information
+greeting.message=Welcome
+#greeting.name=Subramanian
+#greeting.when=today
+
+
+Dev Mode:
+
+ mvn  compile quarkus:dev  -Dgreeting.message=Hello,FromSystem
+
+Production Mode:
+
+./mvnw package
+
+java -Dgreeting.message=Hello,FromSystem -jar target/quarkus-app/quarkus-run.jar
+
+.....................................................................................System Properties:
+
+ System properties are supplied through -D flag during startup.
+
+Dev Mode:
+
+ mvn  compile quarkus:dev  -Dgreeter.message=Hello,FromSystem
+ 
+How to test ?
+ Run the application, see from where the property is coming
+
+Keep the property in the application.property file, and see the difference.
+
+if same property present in system and application.properties who will win ? System because it has the highest ordianal value.
+
+ 
+Production Mode
+ -JVM- Runnar Jar
+    java -Dgreeter.message=Hello,FromSystem -jar target/quarkus-app/quarkus-run.jar
+
+-Native Mode
+    export GREETER_MESSAGE=Hello,FromSystem;   ./target/myapp-runner 
+.....................................................................................
+			..............................................................................................
+			How to read Properties from Envinonment Variables
+..............................................................................................
+
+In Unix/Linux,Mac, How to set env variables
+
+export VariableName=value
+
+In windows
+
+SET VariableName=value
+eg:
+E:\session\IBM\2022\march\quarkus\code-with-config>SET greeting.message=Hello,From Env Variable
+
+E:\session\IBM\2022\march\quarkus\code-with-config>mvnw compile quarkus:dev
+
+
+What if i have 
+.greeter.message property in application.property file
+and supply via Env variable
+and supply via system property 
+
+Which property value will be displayed?
+  -system property.
+
+..................................................................................
+			  .env files
+
+env files isloate all env variables and group into single source of the truth
+
+.env file in the current working directory
+
+QUARKUS_DATASOURCE_PASSWORD=youshallnotpass 
+
+The name QUARKUS_DATASOURCE_PASSWORD the same conversion rules used for Environment variables.
+For dev mode, this file can be placed in the root of the project, but it is advised to not check it in to version control.
+
+
+steps:
+
+1.create .env file inside project root dir
+
+config-app
+src
+target
+.env
+
+..................................................................................
+			  .env files
+....................................................................................
+
+env files isloate all env variables and group into single source of the truth
+
+.env file in the current working directory
+
+QUARKUS_DATASOURCE_PASSWORD=youshallnotpass 
+The name QUARKUS_DATASOURCE_PASSWORD the same conversion rules used for Environment variables.
+For dev mode, this file can be placed in the root of the project, but it is advised to not check it in to version control.
+
+
+steps:
+
+1.create .env file inside project root dir
+
+config-app
+src
+target
+.env
+
+2.Add config information inside .env file
+ -Name of the Property should be UPPERCASE_UPPERCASE=value like Env variable
+
+.env
+GREETER_MESSAGE=Hello,FromENVFILE
+
+
+3.build app and run test
+
+http://localhost:8080/hello
+Subramanian Hello,FromENVFILE today
+
+.............................................................................................
+		      Can We have multiple application.properties 
+............................................................................................
+
+Yes , we can multiple application.properties files
+
+
+Locations:
+ 
+1.
+src
+ |
+ main
+  |
+  resources
+     application.proprties
+
+2.App-name - config-app
+   
+  config
+	|
+     application.properties
+
+ src
+ |
+ main
+  |
+  resources
+     application.proprties
+
+....................................................................................	
+		  MicroProfile configuration file
+.....
+The microprofile configuration file is kept 
+src/main/resources/Meta-inf/microprofile-config.properties
+
+Recommendations: dont use this file, always application.properties are recommended
+...................................................................................
+			 Advanced Configuration Options
+...................................................................................
+
+1.YAML configuration
+
+YAML is most popular configuration format. Kubernets relies on the YAML format
+
+
+
+2.remove application.properties from src/main/resources folder and add application.yaml
+greeting:
+  message: welcome to Yaml Config
+  name: YAML Name
+3.Read yaml config
+
+1.YAML Configuration
+
+YAML is most popular configuration format. Kubernets relies on the YAML format
+
+Steps:
+1.install Yaml extension
+quarkus ext add config-yaml  
+
+2.remove application.properties from src/main/resources folder and add application.yaml
+greeting:
+  message: welcome to Yaml Config
+  name: YAML Name
+3.Read yaml config
+..................................................................................
+				Profile based configuration
+....................................................................................
+Enviroment could be :
+1.prod
+2.dev
+3.test
+
+what if i want to supply the properties based on env.
+
+Profiles:
+
+application.yaml
+
+#greeting:
+#  message: welcome to Yaml Config
+#  name: YAML Name
+
+#Prod env
+"%prod":
+  greeting:
+    message: Production Greeting
+    name: Production Name
+#dev env
+"%dev":
+  greeting:
+    message: dev Greeting
+    name: dev Name
+#test env
+
+.....................................................................................
+			Quarkus built in Properties
+
+.....................................................................................
+		      External Configuration Infrastructure
+....................................................................................
+
+
+
+
+
+
+
+
+

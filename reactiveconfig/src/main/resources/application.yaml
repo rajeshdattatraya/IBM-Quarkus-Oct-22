@@ -1,0 +1,15 @@
+#greeting:
+#  message: welcome to Yaml Config
+#  name: YAML Name
+
+#Prod env
+"%prod":
+  greeting:
+    message: Production Greeting
+    name: Production Name
+#dev env
+"%dev":
+  greeting:
+    message: dev Greeting
+    name: dev Name
+#test env

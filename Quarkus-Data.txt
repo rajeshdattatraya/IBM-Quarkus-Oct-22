@@ -1,0 +1,1075 @@
+			    Quarkus Data
+.....................................................................................
+			   Quarkus- ORM
+                         JPA,Hibernate,Panache			
+.....................................................................................
+
+Microservice design pattern called "Database Per Service Pattern" ,According to this Pattern Quarkus implements datasources.
+
+Database Per Service Configuration:
+
+quarkus.datasource."ServiceName".dbProperties=value
+
+
+eg:
+quarkus.datasource.db-kind=h2
+quarkus.datasource.username=username-default
+quarkus.datasource.jdbc.url=jdbc:h2:mem:default
+quarkus.datasource.jdbc.max-size=13
+
+quarkus.datasource.users.db-kind=h2
+quarkus.datasource.users.username=username1
+quarkus.datasource.users.jdbc.url=jdbc:h2:mem:users
+quarkus.datasource.users.jdbc.max-size=11
+
+quarkus.datasource.inventory.db-kind=h2
+quarkus.datasource.inventory.username=username2
+quarkus.datasource.inventory.jdbc.url=jdbc:h2:mem:inventory
+quarkus.datasource.inventory.jdbc.max-size=12
+
+quarkus.datasource.customers.db-kind=postgresql 
+quarkus.datasource.customers.username=<your username>
+quarkus.datasource.customers.password=<your password>
+quarkus.datasource.customers.jdbc.url=jdbc:postgresql://localhost:5432/hibernate_orm_test
+quarkus.datasource.customers.jdbc.max-size=16
+
+
+DbKind: Type of database
+common db-kind value conventions
+
+DB2: db2
+
+Derby: derby
+
+H2: h2
+
+MariaDB: mariadb
+
+Microsoft SQL Server: mssql
+
+MySQL: mysql
+
+Oracle: oracle
+
+PostgreSQL: postgresql, pgsql or pg
+
+Data Source:
+...........
+Agroal data source is default datasource...
+  It is modern,lightweight connection pool implementation designed for high performance
+
+Data sources are powered with reactive programming
+   Datasoruces are powered with non blocking arch....
+
+Transactions:
+   Quarkus data module offeres transaction implementations.
+   Quarkus implments Narayana as transaction manager
+
+What is Narayana?
+Narayana is a transactions toolkit which provides support for applications developed using a broad range of standards-based transaction protocols:
+
+JTA
+JTS
+Web-Service Transactions
+REST Transactions
+STM
+
+Reactive Data sources:
+  quarkus-reactive-db2-client
+  quarkus-reactive-pg-client
+ etc...
+
+Coding Pattern:
+   Quarkus uses hibernate as low level engine for persistence and built upon JPA   Standards
+   Quarkus uses Panache framework built on top of Hibernate.
+
+			Panache
+			  |
+			 JPA
+			  |
+			Hibernate
+			   
+....................................................................................
+			    JPA With Hibernate
+...................................................................................
+
+Steps:
+
+1.You need database 
+   db2
+   Derby(in-process)
+   H2(in-process)
+   Mariadb
+   mysql
+   postgresql
+
+How to install db for dev?
+
+Two ways
+1.install db server
+2.install via containers -dockers
+
+Quarkus apps  has mode
+
+1.dev mode
+  start db server  
+     standalone
+     via docker
+2.prod mode
+   via containers
+
+
+Quarkus offers features dev services for databases
+...................................................
+If you quaurkus apps runs in dev/test mode, quarkus provides you with a zero config database outof the box,
+ a feature we refer to as "Dev Services"
+
+If you enable dev service for any database, quarkus runs database as part of app within embeded docker container.
+ db2,mariadb,mssql,mysql,oracle,postgresql-dev services enabled database
+
+application.properties
+quarkus.devservices.enabled=true/false
+quarkus.datasource.devservices.enabled=true/false
+
+username and password for dev services:
+.......................................
+postgre,mariadb,mysql,db2,h2 - quarkus,quarkus
+
+
+2.Quarkus orm dependency
+ quarkus-hibernate-orm
+ quarkus-agroal
+ quarkus-jdbc-postgresql
+
+3.JPA Annotations
+  @Entity
+
+4.EntityManager
+....................................................................................
+
+EG:
+
+pom.xml
+       <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-agroal</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+
+application.properties
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=quarkus_test
+%prod.quarkus.datasource.password=quarkus_test
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost/quarkus_test
+%prod.quarkus.datasource.jdbc.max-size=8
+%prod.quarkus.datasource.jdbc.min-size=2
+%prod.quarkus.hibernate-orm.database.generation=create
+
+quarkus.hibernate-orm.log.sql=true
+quarkus.hibernate-orm.sql-load-script=import.sql
+
+........
+
+Enity:
+package org.acme.hibernate.orm;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "known_fruits")
+@NamedQuery(name = "Fruits.findAll", query = "SELECT f FROM Fruit f ORDER BY f.name", hints = @QueryHint(name = "org.hibernate.cacheable", value = "true"))
+@Cacheable
+public class Fruit {
+
+    @Id
+    @SequenceGenerator(name = "fruitsSequence", sequenceName = "known_fruits_id_seq", allocationSize = 1, initialValue = 10)
+    @GeneratedValue(generator = "fruitsSequence")
+    private Integer id;
+
+    @Column(length = 40, unique = true)
+    private String name;
+
+    public Fruit() {
+    }
+
+    public Fruit(String name) {
+        this.name = name;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+
+Resource:
+package org.acme.hibernate.orm;
+
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+@Path("fruits")
+@Produces("application/json")
+@Consumes("application/json")
+public class FruitResource {
+
+    private static final Logger LOGGER = Logger.getLogger(FruitResource.class.getName());
+
+    @Inject
+    EntityManager entityManager;
+
+    @GET
+    public List<Fruit> get() {
+        return entityManager.createNamedQuery("Fruits.findAll", Fruit.class)
+                .getResultList();
+    }
+
+    @GET
+    @Path("{id}")
+    public Fruit getSingle(Integer id) {
+        Fruit entity = entityManager.find(Fruit.class, id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        return entity;
+    }
+
+    @POST
+    @Transactional
+    public Response create(Fruit fruit) {
+        if (fruit.getId() != null) {
+            throw new WebApplicationException("Id was invalidly set on request.", 422);
+        }
+
+        entityManager.persist(fruit);
+        return Response.ok(fruit).status(201).build();
+    }
+
+    @PUT
+    @Path("{id}")
+    @Transactional
+    public Fruit update(Integer id, Fruit fruit) {
+        if (fruit.getName() == null) {
+            throw new WebApplicationException("Fruit Name was not set on request.", 422);
+        }
+
+        Fruit entity = entityManager.find(Fruit.class, id);
+
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+
+        entity.setName(fruit.getName());
+
+        return entity;
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Transactional
+    public Response delete(Integer id) {
+        Fruit entity = entityManager.getReference(Fruit.class, id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        entityManager.remove(entity);
+        return Response.status(204).build();
+    }
+
+    @Provider
+    public static class ErrorMapper implements ExceptionMapper<Exception> {
+
+        @Inject
+        ObjectMapper objectMapper;
+
+        @Override
+        public Response toResponse(Exception exception) {
+            LOGGER.error("Failed to handle request", exception);
+
+            int code = 500;
+            if (exception instanceof WebApplicationException) {
+                code = ((WebApplicationException) exception).getResponse().getStatus();
+            }
+
+            ObjectNode exceptionJson = objectMapper.createObjectNode();
+            exceptionJson.put("exceptionType", exception.getClass().getName());
+            exceptionJson.put("code", code);
+
+            if (exception.getMessage() != null) {
+                exceptionJson.put("error", exception.getMessage());
+            }
+
+            return Response.status(code)
+                    .entity(exceptionJson)
+                    .build();
+        }
+
+    }
+}
+...................................................................................
+		  Hibernate ORM With Panache
+.................................................................................	Hibernate ORM is the de facto JPA implementation and offers you the full breadth of an object relational mapper. It makes complex mappings possible but it does not give simple apis.
+Hibernate Panache is wrapper on the top of Hibernate orm which makes code simple , more readable and simple.
+
+Panche is a framework built by Red hat for quarkus which is similar to "Spring CURD Repostories"
+
+In General, curd is implemented using
+
+JPA and Hibernate specific apis, this is makes our code tightly coupled.
+
+DAO Design pattern abstracts away how to handle database operations like DOMAIN Models.
+
+Quarkus offers that abstraction via panache.
+			
+Panche PRogramming can be written using two design patterns
+
+1.Active Record pattern
+2.DAO Pattern or Repository Pattern
+
+
+Steps: Active Record pattern
+
+1.Define Entity
+
+@Enity
+public class Fruit extends PanacheEntity {
+
+}
+
+JPA Entity Rules
+1.class must be public
+2.fields must be declared private
+3.must have setters,getters and constructors
+4.id field must have annotated @Id
+
+Panache Entity Rules
+
+1.class must be public
+2.fields must be declared public
+3.No setters and no getters
+4.id field annotation not necessary
+
+Pachache Entity features:
+1.offers more readable domain specific CURD operations apis
+  persist,delete,listAll,findById,list,deleteAll.....
+2.Apart from you can add your own methods too.
+
+@Enity
+public class Fruit extends PanacheEntity {
+   public String name;   
+  //custom query apis
+  public static Fruit findByName(String name){
+      return find("name",name).firstResult()
+  }
+
+
+  public String getName(){
+      return name.toupperCase()
+  }  
+
+}
+.....................................................................................
+			DAO Pattern or Repository Pattern
+
+Similar like JPA pattern.
+
+Steps:
+
+1.Entity Declaration remains same
+
+
+package org.acme.hibernate.orm;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "known_fruits")
+@NamedQuery(name = "Fruits.findAll", query = "SELECT f FROM Fruit f ORDER BY f.name", hints = @QueryHint(name = "org.hibernate.cacheable", value = "true"))
+@Cacheable
+public class Fruit {
+
+    @Id
+    @SequenceGenerator(name = "fruitsSequence", sequenceName = "known_fruits_id_seq", allocationSize = 1, initialValue = 10)
+    @GeneratedValue(generator = "fruitsSequence")
+    private Integer id;
+
+    @Column(length = 40, unique = true)
+    private String name;
+
+    public Fruit() {
+    }
+
+    public Fruit(String name) {
+        this.name = name;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
+
+2.Declare Repository Class
+
+@ApplicationScoped
+public class FruitRespository implements PanacheRepository<Fruit>{
+
+   //custom query apis
+
+   public  Fruit findByName(String name){
+      return find("name",name).firstResult()
+  }
+}
+
+3.Inject into resource /service 
+  
+  @inject
+  FruitRespository  repo
+
+.....................................................................................
+
+Panache Implementation:			 
+eg:
+
+    <dependencies>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+
+
+2.application.properties
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=quarkus_test
+%prod.quarkus.datasource.password=quarkus_test
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost/quarkus_test
+%prod.quarkus.datasource.jdbc.max-size=8
+%prod.quarkus.datasource.jdbc.min-size=2
+
+quarkus.hibernate-orm.database.generation=drop-and-create
+quarkus.hibernate-orm.log.sql=true
+quarkus.hibernate-orm.sql-load-script=import.sql
+
+3.Active Record Pattern Implementation:
+package org.acme.hibernate.orm.panache.entity;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+
+@Entity
+@Cacheable
+public class FruitEntity extends PanacheEntity {
+    @Column(length = 40, unique = true)
+    public String name;
+
+    public FruitEntity() {
+    }
+
+    public FruitEntity(String name) {
+        this.name = name;
+    }
+}
+...
+Resource Class:
+package org.acme.hibernate.orm.panache.entity;
+
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+import org.acme.hibernate.orm.panache.repository.Fruit;
+import org.jboss.logging.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.quarkus.panache.common.Sort;
+
+@Path("entity/fruits")
+@ApplicationScoped
+@Produces("application/json")
+@Consumes("application/json")
+public class FruitEntityResource {
+
+    private static final Logger LOGGER = Logger.getLogger(FruitEntityResource.class.getName());
+
+    @GET
+    public List<FruitEntity> get() {
+        return FruitEntity.listAll(Sort.by("name"));
+    }
+
+    @GET
+    @Path("{id}")
+    public FruitEntity getSingle(Long id) {
+        FruitEntity entity = FruitEntity.findById(id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        return entity;
+    }
+
+    @POST
+    @Transactional
+    public Response create(FruitEntity fruit) {
+        if (fruit.id != null) {
+            throw new WebApplicationException("Id was invalidly set on request.", 422);
+        }
+
+        fruit.persist();
+        return Response.ok(fruit).status(201).build();
+    }
+
+    @PUT
+    @Path("{id}")
+    @Transactional
+    public FruitEntity update(Long id, Fruit fruit) {
+        if (fruit.name == null) {
+            throw new WebApplicationException("Fruit Name was not set on request.", 422);
+        }
+
+        FruitEntity entity = FruitEntity.findById(id);
+
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+
+        entity.name = fruit.name;
+
+        return entity;
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Transactional
+    public Response delete(Long id) {
+        FruitEntity entity = FruitEntity.findById(id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        entity.delete();
+        return Response.status(204).build();
+    }
+
+    @Provider
+    public static class ErrorMapper implements ExceptionMapper<Exception> {
+
+        @Inject
+        ObjectMapper objectMapper;
+
+        @Override
+        public Response toResponse(Exception exception) {
+            LOGGER.error("Failed to handle request", exception);
+
+            int code = 500;
+            if (exception instanceof WebApplicationException) {
+                code = ((WebApplicationException) exception).getResponse().getStatus();
+            }
+
+            ObjectNode exceptionJson = objectMapper.createObjectNode();
+            exceptionJson.put("exceptionType", exception.getClass().getName());
+            exceptionJson.put("code", code);
+
+            if (exception.getMessage() != null) {
+                exceptionJson.put("error", exception.getMessage());
+            }
+
+            return Response.status(code)
+                    .entity(exceptionJson)
+                    .build();
+        }
+
+    }
+}
+................................................
+
+Repository /DAO pattern:
+.......................
+Enity:
+package org.acme.hibernate.orm.panache.repository;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+@Entity
+@Cacheable
+public class Fruit {
+
+    @Id
+    @GeneratedValue
+    public Long id;
+
+    @Column(length = 40, unique = true)
+    public String name;
+
+    public Fruit() {
+    }
+
+    public Fruit(String name) {
+        this.name = name;
+    }
+}
+
+Repository:
+package org.acme.hibernate.orm.panache.repository;
+
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class FruitRepository implements PanacheRepository<Fruit> {
+}
+
+Resource/Service:
+package org.acme.hibernate.orm.panache.repository;
+
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.quarkus.panache.common.Sort;
+
+@Path("repository/fruits")
+@ApplicationScoped
+@Produces("application/json")
+@Consumes("application/json")
+public class FruitRepositoryResource {
+
+    @Inject
+    FruitRepository fruitRepository;
+
+    private static final Logger LOGGER = Logger.getLogger(FruitRepositoryResource.class.getName());
+
+    @GET
+    public List<Fruit> get() {
+        return fruitRepository.listAll(Sort.by("name"));
+    }
+
+    @GET
+    @Path("{id}")
+    public Fruit getSingle(Long id) {
+        Fruit entity = fruitRepository.findById(id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        return entity;
+    }
+
+    @POST
+    @Transactional
+    public Response create(Fruit fruit) {
+        if (fruit.id != null) {
+            throw new WebApplicationException("Id was invalidly set on request.", 422);
+        }
+
+        fruitRepository.persist(fruit);
+        return Response.ok(fruit).status(201).build();
+    }
+
+    @PUT
+    @Path("{id}")
+    @Transactional
+    public Fruit update(Long id, Fruit fruit) {
+        if (fruit.name == null) {
+            throw new WebApplicationException("Fruit Name was not set on request.", 422);
+        }
+
+        Fruit entity = fruitRepository.findById(id);
+
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+
+        entity.name = fruit.name;
+
+        return entity;
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Transactional
+    public Response delete(Long id) {
+        Fruit entity = fruitRepository.findById(id);
+        if (entity == null) {
+            throw new WebApplicationException("Fruit with id of " + id + " does not exist.", 404);
+        }
+        fruitRepository.delete(entity);
+        return Response.status(204).build();
+    }
+
+    @Provider
+    public static class ErrorMapper implements ExceptionMapper<Exception> {
+
+        @Inject
+        ObjectMapper objectMapper;
+
+        @Override
+        public Response toResponse(Exception exception) {
+            LOGGER.error("Failed to handle request", exception);
+
+            int code = 500;
+            if (exception instanceof WebApplicationException) {
+                code = ((WebApplicationException) exception).getResponse().getStatus();
+            }
+
+            ObjectNode exceptionJson = objectMapper.createObjectNode();
+            exceptionJson.put("exceptionType", exception.getClass().getName());
+            exceptionJson.put("code", code);
+
+            if (exception.getMessage() != null) {
+                exceptionJson.put("error", exception.getMessage());
+            }
+
+            return Response.status(code)
+                    .entity(exceptionJson)
+                    .build();
+        }
+
+    }
+}
+...................................................................................
+			 Hibernate Reactive and Panache
+...................................................................................
+
+Offers Streaming and non blocking way of accessing database layer..
+
+Transactions are supported with functional api model
+Panche.withTransaction(transactioncode)
+
+Transactions are handled in declarations pattern
+
+Active Record Pattern
+
+public class Fruit extends PanacheEntity{
+
+ public static Uni<Fruit> findByName(String name){
+	  return find("name",name).firstResult()
+ }
+}				
+Eg:
+pom.xml
+ <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-reactive-panache</artifactId>
+        </dependency>
+        <!-- Hibernate Reactive uses the reactive-pg-client with PostgreSQL under the hood -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-reactive-pg-client</artifactId>
+        </dependency>
+        <!-- We are using RESTEasy Reactive in this quickstart -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-reactive-jackson</artifactId>
+        </dependency>
+
+
+application.properties
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=quarkus_test
+%prod.quarkus.datasource.password=quarkus_test
+
+quarkus.hibernate-orm.database.generation=drop-and-create
+quarkus.hibernate-orm.log.sql=true
+quarkus.hibernate-orm.sql-load-script=import.sql
+
+# Reactive config
+%prod.quarkus.datasource.reactive.url=vertx-reactive:postgresql://localhost/quarkus_test
+
+
+Entity:
+package org.acme.hibernate.orm.panache;
+
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
+import io.quarkus.hibernate.reactive.panache.PanacheEntity;
+
+@Entity
+@Cacheable
+public class Fruit extends PanacheEntity {
+
+    @Column(length = 40, unique = true)
+    public String name;
+
+    public Fruit() {
+    }
+
+    public Fruit(String name) {
+        this.name = name;
+    }
+
+}
+
+Resource:
+package org.acme.hibernate.orm.panache;
+
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+
+import java.util.List;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.panache.common.Sort;
+import io.smallrye.mutiny.CompositeException;
+import io.smallrye.mutiny.Uni;
+
+@Path("fruits")
+@ApplicationScoped
+@Produces("application/json")
+@Consumes("application/json")
+public class FruitResource {
+
+    private static final Logger LOGGER = Logger.getLogger(FruitResource.class.getName());
+
+    @GET
+    public Uni<List<Fruit>> get() {
+        return Fruit.listAll(Sort.by("name"));
+    }
+
+    @GET
+    @Path("{id}")
+    public Uni<Fruit> getSingle(Long id) {
+        return Fruit.findById(id);
+    }
+
+    @POST
+    public Uni<Response> create(Fruit fruit) {
+        if (fruit == null || fruit.id != null) {
+            throw new WebApplicationException("Id was invalidly set on request.", 422);
+        }
+
+        return Panache.withTransaction(fruit::persist)
+                    .replaceWith(Response.ok(fruit).status(CREATED)::build);
+    }
+
+    @PUT
+    @Path("{id}")
+    public Uni<Response> update(Long id, Fruit fruit) {
+        if (fruit == null || fruit.name == null) {
+            throw new WebApplicationException("Fruit name was not set on request.", 422);
+        }
+
+        return Panache
+                .withTransaction(() -> Fruit.<Fruit> findById(id)
+                    .onItem().ifNotNull().invoke(entity -> entity.name = fruit.name)
+                )
+                .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
+                .onItem().ifNull().continueWith(Response.ok().status(NOT_FOUND)::build);
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Uni<Response> delete(Long id) {
+        return Panache.withTransaction(() -> Fruit.deleteById(id))
+                .map(deleted -> deleted
+                        ? Response.ok().status(NO_CONTENT).build()
+                        : Response.ok().status(NOT_FOUND).build());
+    }
+
+    /**
+     * Create a HTTP response from an exception.
+     *
+     * Response Example:
+     *
+     * <pre>
+     * HTTP/1.1 422 Unprocessable Entity
+     * Content-Length: 111
+     * Content-Type: application/json
+     *
+     * {
+     *     "code": 422,
+     *     "error": "Fruit name was not set on request.",
+     *     "exceptionType": "javax.ws.rs.WebApplicationException"
+     * }
+     * </pre>
+     */
+    @Provider
+    public static class ErrorMapper implements ExceptionMapper<Exception> {
+
+        @Inject
+        ObjectMapper objectMapper;
+
+        @Override
+        public Response toResponse(Exception exception) {
+            LOGGER.error("Failed to handle request", exception);
+
+            Throwable throwable = exception;
+
+            int code = 500;
+            if (throwable instanceof WebApplicationException) {
+                code = ((WebApplicationException) exception).getResponse().getStatus();
+            }
+
+            // This is a Mutiny exception and it happens, for example, when we try to insert a new
+            // fruit but the name is already in the database
+            if (throwable instanceof CompositeException) {
+                throwable = ((CompositeException) throwable).getCause();
+            }
+
+            ObjectNode exceptionJson = objectMapper.createObjectNode();
+            exceptionJson.put("exceptionType", throwable.getClass().getName());
+            exceptionJson.put("code", code);
+
+            if (exception.getMessage() != null) {
+                exceptionJson.put("error", throwable.getMessage());
+            }
+
+            return Response.status(code)
+                    .entity(exceptionJson)
+                    .build();
+        }
+
+    }
+}
+.............................****************.......................................
+
+
+
+
+
+
+
