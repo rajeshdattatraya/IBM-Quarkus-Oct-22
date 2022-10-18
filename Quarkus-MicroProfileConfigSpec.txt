@@ -371,16 +371,93 @@ application.yaml
 
 .....................................................................................
 			Quarkus built in Properties
+.....................................................................................
+
+Quarkus offers lot of built in properties, based on modules
+if it is web module - lot of configuration for web.
+https://quarkus.io/guides/all-config
+
+quarkus.module.propertyName =value
 
 .....................................................................................
 		      External Configuration Infrastructure
 ....................................................................................
 
+Third party configuration sources
+
+1.YAML 
+2.Hashicorp value config source
+3.Consul configsource 
+4.Spring Cloud Config
+5.Jdbc Config
+6.Kubernets config sources - ConfigMap
+etc...
 
 
+Consul Based Configuration:
+
+Steps:
+1.You need consul server
+docker run --rm --name consul -p 8500:8500 -p 8501:8501 consul:1.7 agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0 --https-port=8501
+
+2.Test the consul server 
+ http://localhost:8500/ui/dc1/services 
+
+3.create Quarkus project
+   quarkus-config-consul - driver module
+
+ 3.1.quarkus create app config-consule-app
+
+ 3.2.quarkus ext add config-consul
+  <dependency>
+      <groupId>io.quarkiverse.config</groupId>
+      <artifactId>quarkus-config-consul</artifactId>
+    </dependency>
+
+4.configure the quarkus application
+    How to connect with consul.
+
+application.properties
+
+# use the same name as the application name that was configured when standing up the Config Server
+quarkus.application.name=consul-test
+# enable retrieval of configuration from Consul - this is off by default
+quarkus.consul-config.enabled=true
+# this is a key in Consul's KV store that the Quarkus application will read and try to extract properties from
+quarkus.consul-config.properties-value-keys=config/${quarkus.application.name}
 
 
+5.create key value store in the consul server
 
+key/Value
 
+ config/consul-test(value) : propertyName=value
 
+6.Quarkus code
 
+package org.acme;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("/hello")
+public class GreetingResource {
+    @ConfigProperty(name = "greeting.message", defaultValue="Hello from default")
+    String message;
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        return message;
+    }
+}
+
+7.Test the app
+ http://localhost:8080/hello
+Hello From Consul
+
+application-dev.properties
+application-prod.properties
+applicaton-stage.properties

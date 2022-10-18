@@ -1,0 +1,46 @@
+E:\session\IBM\2022\oct\quarkus-session\config-kubernets-app>minikube start
+* minikube v1.23.0 on Microsoft Windows 10 Pro 10.0.19043 Build 19043
+* minikube 1.27.1 is available! Download it: https://github.com/kubernetes/minikube/releases/tag/v1.27.1
+* To disable this notice, run: 'minikube config set WantUpdateNotification false'
+
+* Using the docker driver based on existing profile
+* Starting control plane node minikube in cluster minikube
+* Pulling base image ...
+* Restarting existing docker container for "minikube" ...
+* Preparing Kubernetes v1.22.1 on Docker 20.10.8 ...
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+
+E:\session\IBM\2022\oct\quarkus-session\config-kubernets-app>kubectl create configmap banking --from-file=application.yaml
+configmap/banking created
+
+
+E:\session\IBM\2022\oct\quarkus-session\config-kubernets-app>kubectl get cm/banking -oyaml
+apiVersion: v1
+data:
+  application.yaml: |
+    bank:
+      name: Bank of ConfigMap
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-10-17T16:33:41Z"
+  name: banking
+  namespace: default
+  resourceVersion: "42395"
+  uid: 0339c55c-f2b
+
+E:\session\IBM\2022\oct\quarkus-session\config-kubernets-app>mvn clean package -Dquarkus.kubernetes.deploy=true
+
+
+E:\session\IBM\2022\oct\quarkus-session\config-kubernets-app>minikube service list
+|-------------|----------------------|--------------|---------------------------|
+|  NAMESPACE  |         NAME         | TARGET PORT  |            URL            |
+|-------------|----------------------|--------------|---------------------------|
+| default     | config-kubernets-app | http/80      | http://192.168.49.2:30394 |
+| default     | kubernetes           | No node port |
+| default     | mykub-demo           | http/80      | http://192.168.49.2:32760 |
+| kube-system | kube-dns             | No node port |
+|-------------|----------------------|--------------|---------------------------|
+
