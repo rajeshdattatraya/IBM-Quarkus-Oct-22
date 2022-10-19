@@ -362,7 +362,7 @@ public class FruitResource {
     }
 }
 ...................................................................................
-		  Hibernate ORM With Panache
+		        Hibernate ORM With Panache
 .................................................................................	Hibernate ORM is the de facto JPA implementation and offers you the full breadth of an object relational mapper. It makes complex mappings possible but it does not give simple apis.
 Hibernate Panache is wrapper on the top of Hibernate orm which makes code simple , more readable and simple.
 
