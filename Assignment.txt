@@ -32,4 +32,65 @@ Requriement:
 2.Service layer 
 3.CDI implmentations
 4.Global Exception Mapper 
+....................................................................................
+Assignment-2:
+
+
+Assignment 1 :
+
+ You have to build book Resource
+
+/api/books
+
+=>FindAll books
+   if no books, return empty list
+=>findBook by isbn
+  if books not found , throw Exception
+  Path Param
+=>filter books by category
+   Use Query Param
+=>save new book 
+   Save booking to existing database(List)
+   after success return status code 201 with location and entity created
+=>remove existing book - by isbn
+    just delete entry from list 
+   success , return 200
+   error, return error code- NotFound
+=>update book information
+   pass isbn code and payload 
+   update and return updated books
+   if error, return error 
+
+Model : isbn,author,title,publisher,dateofpublishing,edition
+
+Requriement:
+1.Build REST End points
+2.Service layer 
+3.CDI implmentations
+4.Global Exception Mapper 
+5.Data Layer -  Active Record Pattern
+6.Service Communications - REST Services communication
+   -RestClient
+   -Vertx WebClient
+ Event Bus
+
  
+User----------BookApplication -Service
+                   --------------------BookDetails Service --- Repository layer-DB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

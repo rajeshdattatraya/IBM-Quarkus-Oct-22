@@ -1,0 +1,375 @@
+			   MicroService Service Communications
+
+
+Services are represented by Apis
+
+Apis are modeled in many ways
+
+1.RPI
+    -REST API
+    -RPC - Grpc
+    -GraphQl api
+2.Message based
+    -MOM
+       -redis,RabbitMQ
+    -Event driven Arch
+       Vertx-Event Bus
+       Kafka 
+
+Service Communications:
+
+REST: Rest to Rest - http
+Quarkus Implmementations
+  1.MicroProfile Rest Client -  both reactive and non reactive
+  2.Vertx WebClient - By Default Reactive.
+  3.Java 11 HttpClient - Sync and Async
+
+
+MicroProfile Rest Client: Non Reactive
+.......................................	
+pom.xml
+<dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-mutiny</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+
+
+There must be two HTTP services
+ 1.caller
+     |
+ 2.callee
+
+Communications between services are orachastrated by "RestClient"
+
+Step 1:
+Caller Service:
+package org.acme.rest.client;
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/greet")
+public class GreetingService {
+    
+    @GET
+    public String greet() {
+        return "";
+    }
+}
+
+User -----Gives Request to the caller -- GET /greet
+
+
+
+Step 2:
+
+Callee Service:
+package org.acme.rest.client;
+
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/hello")
+public class HelloResource {
+
+    @Inject
+    HelloService helloService;
+
+    @GET
+    public String hello(){
+        return helloService.sayHello();
+    }
+}
+package org.acme.rest.client;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class HelloService {
+
+    public String sayHello(){
+        return "Hello Rest Client!!!!";
+    }
+}
+..................................................................................
+
+
+Step 3:
+
+RestClient Interface - to facilitate Rest Service Communications.
+
+package org.acme.rest.client;
+
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+//http://localhost:8080/hello
+@RegisterRestClient
+@Path("/hello") //Callee route end point
+public interface HelloRestClientService {
+    //methods
+    @GET
+    String sayHello();
+}
+
+1.Here we need declare interface
+2.Annotate interface with @RegisterRestClient
+3.@Path("/hello") indicates the callee route url
+4.HTTP method and apis mapping inside interface
+
+
+Step 5:Configuring application.properties
+
+#mapping the rest client
+org.acme.rest.client.HelloRestClientService/mp-rest/url=http://localhost:8080
+org.acme.rest.client.HelloRestClientService/mp-rest/scope=javax.inject.SingleTon
+
+
+Step 6: Inject RestClient Interface into where ever you want to call.
+package org.acme.rest.client;
+
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/greet")
+public class GreetingService {
+
+    @Inject
+    @RestClient
+    HelloRestClientService helloRestClientService;
+
+    @GET
+    public String greet() {
+        return helloRestClientService.sayHello();
+    }
+}
+
+Step 7: Testing
+ http://localhost:8080/greet
+    It will delegate the request to another http service.
+....................................................................................
+			application.properties configuration Refactoring
+.....................................................................................
+org.acme.rest.client.HelloRestClientService/mp-rest/url=http://localhost:8080
+org.acme.rest.client.HelloRestClientService/mp-rest/scope=javax.inject.Singleton
+
+Here keeping the package name is complex - we have short cut.
+
+#mapping the rest client
+#org.acme.rest.client.HelloRestClientService/mp-rest/url=http://localhost:8080
+#org.acme.rest.client.HelloRestClientService/mp-rest/scope=javax.inject.Singleton
+
+#Refactored Configuration.
+
+hello-api/mp-rest/url=http://localhost:8080
+hello-api/mp-rest/scope=javax.inject.Singleton
+....................................................................................
+			  REST API communication using Vertx-WebClient
+....................................................................................
+
+package org.acme.rest.client;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.client.WebClientOptions;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.WebClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/greet")
+public class GreetingService {
+
+    @Inject
+    @RestClient
+    HelloRestClientService helloRestClientService;
+
+    //Grab Vertx Runtime instance
+    @Inject
+    Vertx vertx;
+    WebClient webClient;
+
+    @GET
+    public String greet() {
+        return helloRestClientService.sayHello();
+    }
+
+    @PostConstruct
+    public void init() {
+        webClient = WebClient.create(vertx, new WebClientOptions()
+                .setDefaultHost("localhost")
+                .setDefaultPort(8080)
+        );
+    }
+
+    @GET
+    @Path("/vertxclient")
+    public Uni<String> greetVertx() {
+        return webClient.get("/hello").send().onItem().transform(HttpResponse::bodyAsString);
+    }
+}
+.....................................................................................
+			Service Communications via Messages
+			   (Event Driven Microservices)
+				 Using vertx Event Bus
+....................................................................................
+
+How to build loosly coupled microservices?
+
+
+AKKA - Actor Model Based.
+
+Actor model is architure model which describes how data can be exchanged among programs we call services using "message oriented and event driven".
+
+Vertx inspired akka with respect to message passing techniques, now we can pass messages using vertx  "Event Bus".
+
+Event Bus:
+ -Event bus is object through which we can exchange messages async.
+ -Event bus is just like message broker which in memory message broker
+ -Event bus uses queue to store messages
+ -Event bus communicates via tcp protocal
+ -Event bus can exchange any type of data- including json.
+ -Event can be used to send and receive messages across the system.
+
+Quarkus can Use EventBus for message oriented communication.
+
+
+Event Bus has its own in memory Event queue where all message published.
+
+How consumer and publisher are connectected?
+
+ Via address :Messages are sent on the event bus to an address.
+address should be unique, can follow dns naming model
+
+ ibm.order
+ ibm.order.inventory
+
+
+Types of message Delivery:
+
+1.point to point -  
+  send messages to only one consumer.
+ eventbus.send
+2.Publisher/Subscriber  - pub sub model
+  One publisher many subscribers
+  eventbus.publish
+3.request/reply
+    send messages to only one consumer with ack.
+
+
+
+package org.acme.rest.client.messages;
+
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.EventBus;
+import io.vertx.mutiny.core.eventbus.Message;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+@Path("/orders")
+public class OrderResource {
+
+    @Inject
+    EventBus eventBus;
+
+    @GET
+    public String publishOrders() {
+        JsonObject orders = new JsonObject().put("id", 1).put("desc", "Mainframes");
+        //point to point -  one to one
+        //eventBus.send("ibm.orders", orders);
+        //pub- sub - one to many
+        // eventBus.publish("ibm.orders",orders);
+        //request-reply
+        Uni<Message<String>> status = eventBus.request("ibm.orders", orders);
+        System.out.println(status);
+        status.onItem().transform(stringMessage ->{
+            System.out.println(stringMessage);
+            return stringMessage;
+        }).subscribe();
+
+         return  "Published";
+//        return eventBus.<JsonObject>request("ibm.orders",orders).onItem().transform(Message::body);
+    }
+}
+
+package org.acme.rest.client.messages;
+
+
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.Message;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class OrderService {
+
+    @ConsumeEvent("ibm.orders-dummy")
+    public void processOrder(Message<JsonObject> orders) {
+        System.out.println("Order Service");
+        System.out.println(orders.body().encodePrettily());
+    }
+}
+
+package org.acme.rest.client.messages;
+
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import io.vertx.mutiny.core.eventbus.Message;
+
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class InventoryService {
+    @ConsumeEvent("ibm.orders")
+    public void processOrder(Message<JsonObject> orders) {
+        System.out.println("Inventory Service");
+        System.out.println(orders.body().encodePrettily());
+    }
+
+//    @ConsumeEvent("ibm.orders")
+//    public Uni<String> processOrder(Message<JsonObject> orders){
+//          orders.body().encode()
+//     }
+}
+
+
+
+
+
+   
